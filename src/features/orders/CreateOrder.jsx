@@ -1,12 +1,13 @@
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 import Button from "../../user-interface/Button";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getCart, clearCart, getTotalPrice } from "../cart/cartSlice";
 import EmptyCart from "../cart/EmptyCart";
 import Store from "../../Store";
 import { formatCurrency } from "../../utils/helpers";
 import { useState } from "react";
+import { fetchAddress } from "../user/userSlice";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -24,7 +25,15 @@ function CreateOrder() {
   const finalPrice = totalPrice + priorityPrice;
   console.log(cart);
 
-  const userName = useSelector((store) => store.user.username);
+  const {
+    userName,
+    status: addressStatus,
+    position,
+    address,
+  } = useSelector((store) => store.user);
+
+  const isloadingAddress = addressStatus === "loading";
+  const dispatch = useDispatch();
 
   const navigate = useNavigation();
   const formError = useActionData();
@@ -62,16 +71,30 @@ function CreateOrder() {
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="sm:basis-40">Address</label>
           <div className="flex-grow">
             <input
               className="input w-full"
               type="text"
               name="address"
+              disabled={isloadingAddress}
+              defaultValue={address}
               required
             />
           </div>
+          <span className="absolute right-3 z-50">
+            <Button
+              type="small"
+              disabled={isloadingAddress}
+              onClick={(e) => {
+                e.preventDefault();
+                dispatch(fetchAddress());
+              }}
+            >
+              Get Position
+            </Button>
+          </span>
         </div>
 
         <div className="flex items-center space-x-2">
